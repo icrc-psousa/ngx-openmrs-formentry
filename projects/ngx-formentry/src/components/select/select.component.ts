@@ -1,527 +1,264 @@
+/* tslint:disable:component-class-suffix  */
 import {
-  AfterViewInit,
-  Component,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  EventEmitter,
-  ExistingProvider,
-  ViewChild,
-  ViewEncapsulation,
-  forwardRef
-} from '@angular/core';
-import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { STYLE } from './select.component.style';
-import { SelectDropdownComponent } from './select-dropdown.component';
-import { Option } from './option';
-import { OptionList } from './option-list';
+    AfterViewInit,
+    Component,
+    ElementRef,
+    Input,
+    Output,
+    HostListener,
+    EventEmitter,
+    TemplateRef,
+    ViewChild
+} from "@angular/core";
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
 
-export const SELECT_VALUE_ACCESSOR: ExistingProvider = {
-  provide: NG_VALUE_ACCESSOR,
-  // tslint:disable:no-use-before-declare
-  useExisting: forwardRef(() => SelectComponent),
-  multi: true
-};
-
+/**
+ * `ibm-select` provides a styled `select` component.
+ *
+ * [See demo](../../?path=/story/select--basic)
+ *
+ * Example:
+ *
+ * ```
+ * <ibm-select [(ngModel)]="model">
+ *     <option value="default" disabled selected hidden>Choose an option</option>
+ *     <option value="option1">Option 1</option>
+ *    <option value="option2">Option 2</option>
+ *     <option value="option3">Option 3</option>
+ * </ibm-select>
+ *    ```
+ *
+ * <example-url>../../iframe.html?id=select--basic</example-url>
+ */
 @Component({
-  selector: 'ng-select',
-  templateUrl: './select.component.html',
-  styles: [STYLE],
-  providers: [SELECT_VALUE_ACCESSOR],
-  encapsulation: ViewEncapsulation.None
+    selector: "ibm-select",
+    template: `
+        <div class="bx--form-item">
+            <ng-template [ngIf]="skeleton">
+                <div *ngIf="label" class="bx--label bx--skeleton"></div>
+                <div class="bx--select bx--skeleton"></div>
+            </ng-template>
+            <div
+                *ngIf="!skeleton"
+                class="bx--select"
+                [ngClass]="{
+                    'bx--select--inline': display === 'inline',
+                    'bx--select--light': theme === 'light',
+                    'bx--select--invalid': invalid,
+                    'bx--select--warning': warn,
+                    'bx--select--disabled': disabled
+                }">
+                <label *ngIf="label" [for]="id" class="bx--label">
+                    <ng-container *ngIf="!isTemplate(label)">{{label}}</ng-container>
+                    <ng-template *ngIf="isTemplate(label)" [ngTemplateOutlet]="label"></ng-template>
+                </label>
+                <div *ngIf="helperText" class="bx--form__helper-text">
+                    <ng-container *ngIf="!isTemplate(helperText)">{{helperText}}</ng-container>
+                    <ng-template *ngIf="isTemplate(helperText)" [ngTemplateOutlet]="helperText"></ng-template>
+                </div>
+                <div *ngIf="display === 'inline'; else noInline" class="bx--select-input--inline__wrapper">
+                    <ng-container *ngTemplateOutlet="noInline"></ng-container>
+                </div>
+            </div>
+        </div>
+
+        <!-- select element: dynamically projected based on 'display' variant -->
+        <ng-template #noInline>
+            <div class="bx--select-input__wrapper" [attr.data-invalid]="(invalid ? true : null)">
+                <select
+                    #select
+                    [attr.id]="id"
+                    [attr.aria-label]="ariaLabel"
+                    [disabled]="disabled"
+                    (change)="onChange($event)"
+                    [attr.aria-invalid]="invalid ? 'true' : null"
+                    class="bx--select-input"
+                    [ngClass]="{
+                        'bx--select-input--xl': size === 'xl',
+                        'bx--select-input--sm': size === 'sm'
+                    }">
+                    <ng-content></ng-content>
+                </select>
+                <svg
+                    focusable="false"
+                    preserveAspectRatio="xMidYMid meet"
+                    style="will-change: transform;"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="bx--select__arrow"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true">
+                    <path d="M8 11L3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"></path>
+                </svg>
+                <svg *ngIf="invalid"focusable="false" preserveAspectRatio="xMidYMid meet" style="will-change: transform;" xmlns="http://www.w3.org/2000/svg" class="bx--text-input__invalid-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2    c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"></path><path d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8    c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z" data-icon-path="inner-path" opacity="0"></path></svg>
+            </div>
+            <div *ngIf="invalid && invalidText && !warn" role="alert" class="bx--form-requirement" aria-live="polite">
+                <ng-container *ngIf="!isTemplate(invalidText)">{{invalidText}}</ng-container>
+                <ng-template *ngIf="isTemplate(invalidText)" [ngTemplateOutlet]="invalidText"></ng-template>
+            </div>
+            <div *ngIf="!invalid && warn" class="bx--form-requirement">
+                <ng-container *ngIf="!isTemplate(warnText)">{{warnText}}</ng-container>
+                <ng-template *ngIf="isTemplate(warnText)" [ngTemplateOutlet]="warnText"></ng-template>
+            </div>
+        </ng-template>
+    `,
+    styles: [`
+        .bx--select--inline .bx--form__helper-text {
+            order: 4;
+        }
+
+        .bx--select--inline:not(.bx--select--invalid) .bx--form__helper-text {
+            margin-top: 0;
+        }
+    `],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: Select,
+            multi: true
+        }
+    ]
 })
-export class SelectComponent
-  implements AfterViewInit, ControlValueAccessor, OnChanges, OnInit {
-  /** Keys. **/
-
-  private KEYS: any = {
-    BACKSPACE: 8,
-    TAB: 9,
-    ENTER: 13,
-    ESC: 27,
-    SPACE: 32,
-    UP: 38,
-    DOWN: 40
-  };
-
-  @Input() options: Array<any>;
-
-  @Input() allowClear = false;
-  @Input() disabled = false;
-  @Input() highlightColor = '#2196f3';
-  @Input() highlightTextColor = '#fff';
-  @Input() multiple = false;
-  @Input() noFilter = 0;
-  @Input() notFoundMsg = 'No results found';
-  @Input() placeholder = '';
-
-  @Output() opened: EventEmitter<null> = new EventEmitter<null>();
-  @Output() closed: EventEmitter<null> = new EventEmitter<null>();
-  @Output() selected: EventEmitter<any> = new EventEmitter<any>();
-  @Output() deselected: EventEmitter<any> = new EventEmitter<any>();
-  @Output() typed: EventEmitter<any> = new EventEmitter<any>();
-
-  @ViewChild('selection') selectionSpan: any;
-  @ViewChild('dropdown') dropdown: SelectDropdownComponent;
-  @ViewChild('filterInput') filterInput: any;
-
-  private _value: Array<any> = [];
-  optionList: OptionList;
-
-  // Selection state variables.
-  hasSelected = false;
-
-  // View state variables.
-  filterEnabled = true;
-  filterInputWidth = 1;
-  hasFocus = false;
-  isBelow = true;
-  isDisabled = false;
-  isOpen = false;
-  placeholderView = '';
-
-  clearClicked = false;
-  selectContainerClicked = false;
-
-  // Width and position for the dropdown container.
-  width: number;
-  top: number;
-  left: number;
-
-  private onChange = (_: any) => {};
-  private onTouched = () => {};
-
-  /** Event handlers. **/
-
-  // Angular lifecycle hooks.
-
-  ngOnInit() {
-    this.placeholderView = this.placeholder;
-  }
-
-  ngAfterViewInit() {
-    this.updateFilterWidth();
-  }
-
-  ngOnChanges(changes: any) {
-    if (changes.hasOwnProperty('options')) {
-      this.updateOptionsList(changes['options'].isFirstChange());
-    }
-    if (changes.hasOwnProperty('noFilter')) {
-      const numOptions: number = this.optionList.options.length;
-      const minNumOptions: number = changes['noFilter'].currentValue;
-      this.filterEnabled = numOptions >= minNumOptions;
-    }
-  }
-
-  // Window.
-
-  onWindowClick() {
-    if (!this.selectContainerClicked) {
-      this.closeDropdown();
-    }
-    this.clearClicked = false;
-    this.selectContainerClicked = false;
-  }
-
-  onWindowResize() {
-    this.updateWidth();
-  }
-
-  // Select container.
-
-  onSelectContainerClick(event: any) {
-    this.selectContainerClicked = true;
-    if (!this.clearClicked) {
-      this.toggleDropdown();
-    }
-  }
-
-  onSelectContainerFocus() {
-    this.onTouched();
-  }
-
-  onSelectContainerKeydown(event: any) {
-    this.handleSelectContainerKeydown(event);
-  }
-
-  // Dropdown container.
-
-  onDropdownOptionClicked(option: Option) {
-    this.multiple ? this.toggleSelectOption(option) : this.selectOption(option);
-  }
-
-  onDropdownClose(focus: any) {
-    this.closeDropdown(focus);
-  }
-
-  // Single filter input.
-
-  onSingleFilterClick() {
-    this.selectContainerClicked = true;
-  }
-
-  onSingleFilterInput(term: string) {
-    setTimeout(() => {
-      if (term.length > 2) {
-        this.typed.emit(term);
-      }
-    }, 500);
-    this.optionList.filter(term);
-  }
-
-  onSingleFilterKeydown(event: any) {
-    this.handleSingleFilterKeydown(event);
-  }
-
-  // Multiple filter input.
-
-  onMultipleFilterInput(event: any) {
-    if (!this.isOpen) {
-      this.openDropdown();
-    }
-    this.updateFilterWidth();
-    setTimeout(() => {
-      this.optionList.filter(event.target.value);
-    });
-  }
-
-  onMultipleFilterKeydown(event: any) {
-    this.handleMultipleFilterKeydown(event);
-  }
-
-  // Single clear select.
-
-  onClearSelectionClick(event: any) {
-    this.clearClicked = true;
-    this.clearSelection();
-    this.closeDropdown(true);
-  }
-
-  // Multiple deselect option.
-
-  onDeselectOptionClick(option: Option) {
-    this.clearClicked = true;
-    this.deselectOption(option);
-  }
-
-  /** API. **/
-
-  // TODO fix issues with global click/key handler that closes the dropdown.
-  open() {
-    this.openDropdown();
-  }
-
-  close() {
-    this.closeDropdown();
-  }
-
-  clear() {
-    this.clearSelection();
-  }
-
-  select(value: string) {
-    this.optionList.getOptionsByValue(value).forEach((option) => {
-      this.selectOption(option);
-    });
-    this.valueChanged();
-  }
-
-  /** ControlValueAccessor interface methods. **/
-
-  writeValue(value: any) {
-    this.value = value;
-  }
-
-  registerOnChange(fn: (_: any) => void) {
-    this.onChange = fn;
-  }
-
-  registerOnTouched(fn: () => void) {
-    this.onTouched = fn;
-  }
-
-  setDisabledState(isDisabled: boolean) {
-    this.disabled = isDisabled;
-  }
-
-  /** Value. **/
-
-  get value(): any {
-    if (this._value.length === 0) {
-      return '';
-    } else {
-      return this.multiple ? this._value : this._value[0];
-    }
-  }
-
-  set value(v: any) {
-    if (typeof v === 'undefined' || v === null || v === '') {
-      v = [];
-    } else if (typeof v === 'string') {
-      v = [v];
-    } else if (!Array.isArray(v)) {
-      throw new TypeError('Value must be a string or an array.');
-    }
-
-    if (!OptionList.equalValues(v, this._value)) {
-      this.optionList.value = v;
-      this.valueChanged();
-    }
-  }
-
-  private valueChanged() {
-    this._value = this.optionList.value;
-
-    this.hasSelected = this._value.length > 0;
-    this.placeholderView = this.hasSelected ? '' : this.placeholder;
-    this.updateFilterWidth();
-
-    this.onChange(this.value);
-  }
-
-  /** Initialization. **/
-
-  private updateOptionsList(firstTime: boolean) {
-    let v: Array<string>;
-
-    if (!firstTime) {
-      v = this.optionList.value;
-    }
-
-    this.optionList = new OptionList(this.options);
-
-    if (!firstTime) {
-      this.optionList.value = v;
-      this.valueChanged();
-    }
-  }
-
-  /** Dropdown. **/
-
-  private toggleDropdown() {
-    if (!this.isDisabled) {
-      this.isOpen ? this.closeDropdown(true) : this.openDropdown();
-    }
-  }
-
-  private openDropdown() {
-    if (!this.isOpen) {
-      this.updateWidth();
-      this.updatePosition();
-      this.isOpen = true;
-      if (this.multiple && this.filterEnabled) {
-        this.filterInput.nativeElement.focus();
-      }
-      this.opened.emit(null);
-    }
-  }
-  /* tslint:disable */
-  private closeDropdown(focus: boolean = false) {
-    if (this.isOpen) {
-      this.clearFilterInput();
-      this.isOpen = false;
-      if (focus) {
-        this.focus();
-      }
-      this.closed.emit(null);
-    }
-  }
-  /* tslint:enable */
-  /** Select. **/
-
-  private selectOption(option: Option) {
-    if (!option.selected) {
-      this.optionList.select(option, this.multiple);
-      this.valueChanged();
-      this.selected.emit(option.undecoratedCopy());
-      // Is this not allready done when setting the value??
-      /*setTimeout(() => {
-                if (this.multiple) {
-                    this.updateFilterWidth();
-                }
-            });*/
-    }
-  }
-
-  private deselectOption(option: Option) {
-    if (option.selected) {
-      this.optionList.deselect(option);
-      this.valueChanged();
-      this.deselected.emit(option.undecoratedCopy());
-      setTimeout(() => {
-        if (this.multiple) {
-          // this.updateFilterWidth();
-          this.updatePosition();
-          this.optionList.highlight();
-          if (this.isOpen) {
-            this.dropdown.moveHighlightedIntoView();
-          }
+export class Select implements ControlValueAccessor, AfterViewInit {
+    /**
+     * Tracks the total number of selects instantiated. Used to generate unique IDs
+     */
+    static selectCount = 0;
+
+    /**
+     * `inline` or `default` select displays
+     */
+    @Input() display: "inline" | "default" = "default";
+    /**
+     * Label for the select. Appears above the input.
+     */
+    @Input() label: string | TemplateRef<any>;
+    /**
+     * Optional helper text that appears under the label.
+     */
+    @Input() helperText: string | TemplateRef<any>;
+    /**
+     * Sets the invalid text.
+     */
+    @Input() invalidText: string | TemplateRef<any>;
+    /**
+      * Set to `true` to show a warning (contents set by warningText)
+      */
+    @Input() warn = false;
+    /**
+     * Sets the warning text
+     */
+    @Input() warnText: string | TemplateRef<any>;
+    /**
+     * Sets the unique ID. Defaults to `select-${total count of selects instantiated}`
+     */
+    @Input() id = `select-${Select.selectCount++}`;
+    /**
+     * Number input field render size
+     */
+    @Input() size: "sm" | "md" | "xl" = "md";
+    /**
+     * Set to true to disable component.
+     */
+    @Input() disabled = false;
+    /**
+     * Set to true for a loading select.
+     */
+    @Input() skeleton = false;
+    /**
+     * Set to `true` for an invalid select component.
+     */
+    @Input() invalid = false;
+
+    /**
+     * `light` or `dark` select theme
+     */
+    @Input() theme: "light" | "dark" = "dark";
+    @Input() ariaLabel: string;
+
+    @Output() valueChange = new EventEmitter();
+
+    // @ts-ignore
+    @ViewChild("select", { static: false }) select: ElementRef;
+
+    @Input() set value(v) {
+        this._value = v;
+        if (this.select) {
+            this.select.nativeElement.value = this._value;
         }
-      });
     }
-  }
 
-  private clearSelection() {
-    const selection: Array<Option> = this.optionList.selection;
-    if (selection.length > 0) {
-      this.optionList.clearSelection();
-      this.valueChanged();
-
-      if (selection.length === 1) {
-        this.deselected.emit(selection[0].undecoratedCopy());
-      } else {
-        this.deselected.emit(
-          selection.map((option) => {
-            return option.undecoratedCopy();
-          })
-        );
-      }
+    get value() {
+        return this._value;
     }
-  }
 
-  private toggleSelectOption(option: Option) {
-    option.selected ? this.deselectOption(option) : this.selectOption(option);
-  }
+    protected _value;
 
-  private selectHighlightedOption() {
-    const option: Option = this.optionList.highlightedOption;
-    if (option !== null) {
-      this.selectOption(option);
-      this.closeDropdown(true);
-    }
-  }
-
-  private deselectLast() {
-    const sel: Array<Option> = this.optionList.selection;
-
-    if (sel.length > 0) {
-      const option: Option = sel[sel.length - 1];
-      this.deselectOption(option);
-      this.setMultipleFilterInput(option.label + ' ');
-    }
-  }
-
-  /** Filter. **/
-
-  private clearFilterInput() {
-    if (this.multiple && this.filterEnabled) {
-      this.filterInput.nativeElement.value = '';
-    } else {
-      this.dropdown.clearFilterInput();
-    }
-  }
-
-  private setMultipleFilterInput(value: string) {
-    if (this.filterEnabled) {
-      this.filterInput.nativeElement.value = value;
-    }
-  }
-
-  private handleSelectContainerKeydown(event: any) {
-    const key = event.which;
-
-    if (this.isOpen) {
-      if (key === this.KEYS.ESC || (key === this.KEYS.UP && event.altKey)) {
-        this.closeDropdown(true);
-      } else if (key === this.KEYS.TAB) {
-        this.closeDropdown();
-      } else if (key === this.KEYS.ENTER) {
-        this.selectHighlightedOption();
-      } else if (key === this.KEYS.UP) {
-        this.optionList.highlightPreviousOption();
-        this.dropdown.moveHighlightedIntoView();
-        if (!this.filterEnabled) {
-          event.preventDefault();
+    ngAfterViewInit() {
+        if (
+            this.value !== undefined &&
+            this.value !== null &&
+            this.select &&
+            this.select.nativeElement.value !== this.value
+        ) {
+            this.select.nativeElement.value = this.value;
         }
-      } else if (key === this.KEYS.DOWN) {
-        this.optionList.highlightNextOption();
-        this.dropdown.moveHighlightedIntoView();
-        if (!this.filterEnabled) {
-          event.preventDefault();
-        }
-      }
-    } else {
-      if (
-        key === this.KEYS.ENTER ||
-        key === this.KEYS.SPACE ||
-        (key === this.KEYS.DOWN && event.altKey)
-      ) {
-        /* FIREFOX HACK:
-         *
-         * The setTimeout is added to prevent the enter keydown event
-         * to be triggered for the filter input field, which causes
-         * the dropdown to be closed again.
-         */
-        setTimeout(() => {
-          this.openDropdown();
-        });
-      }
     }
-  }
 
-  private handleMultipleFilterKeydown(event: any) {
-    const key = event.which;
-
-    if (key === this.KEYS.BACKSPACE) {
-      if (
-        this.hasSelected &&
-        this.filterEnabled &&
-        this.filterInput.nativeElement.value === ''
-      ) {
-        this.deselectLast();
-      }
+    /**
+     * Receives a value from the model.
+     */
+    writeValue(obj: any) {
+        this.value = obj;
     }
-  }
 
-  private handleSingleFilterKeydown(event: any) {
-    const key = event.which;
-
-    if (
-      key === this.KEYS.ESC ||
-      key === this.KEYS.TAB ||
-      key === this.KEYS.UP ||
-      key === this.KEYS.DOWN ||
-      key === this.KEYS.ENTER
-    ) {
-      this.handleSelectContainerKeydown(event);
+    /**
+     * Registers a listener that notifies the model when the control updates
+     */
+    registerOnChange(fn: any) {
+        this.onChangeHandler = fn;
     }
-  }
 
-  /** View. **/
-
-  focus() {
-    this.hasFocus = true;
-    if (this.multiple && this.filterEnabled) {
-      this.filterInput.nativeElement.focus();
-    } else {
-      this.selectionSpan.nativeElement.focus();
+    /**
+     * Registers a listener that notifies the model when the control is blurred
+     */
+    registerOnTouched(fn: any) {
+        this.onTouchedHandler = fn;
     }
-  }
 
-  blur() {
-    this.hasFocus = false;
-    this.selectionSpan.nativeElement.blur();
-  }
-
-  updateWidth() {
-    this.width = this.selectionSpan.nativeElement.offsetWidth;
-  }
-
-  updatePosition() {
-    const e = this.selectionSpan.nativeElement;
-    this.left = e.offsetLeft;
-    this.top = e.offsetTop + e.offsetHeight;
-  }
-
-  updateFilterWidth() {
-    if (typeof this.filterInput !== 'undefined') {
-      const value: string = this.filterInput.nativeElement.value;
-      this.filterInputWidth =
-        value.length === 0
-          ? 1 + this.placeholderView.length * 10
-          : 1 + value.length * 10;
+    /**
+     * Sets the disabled state through the model
+     */
+    setDisabledState(isDisabled: boolean) {
+        this.disabled = isDisabled;
     }
-  }
+
+    /**
+     * Handles the change event from the `select`.
+     * Sends events to the change handler and emits a `selected` event.
+     */
+    onChange(event) {
+        this.value = event.target.value;
+        this.onChangeHandler(event.target.value);
+        this.valueChange.emit(event.target.value);
+    }
+
+    /**
+     * Listens for the host blurring, and notifies the model
+     */
+    @HostListener("focusout")
+    focusOut() {
+        this.onTouchedHandler();
+    }
+
+    public isTemplate(value) {
+        return value instanceof TemplateRef;
+    }
+
+    /**
+     * placeholder declarations. Replaced by the functions provided to `registerOnChange` and `registerOnTouched`
+     */
+    protected onChangeHandler = (_: any) => { };
+    protected onTouchedHandler = () => { };
 }

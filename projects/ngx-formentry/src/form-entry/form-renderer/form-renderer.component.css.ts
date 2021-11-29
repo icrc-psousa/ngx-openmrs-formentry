@@ -151,5 +151,16 @@ export const DEFAULT_STYLES = `a {
   border: 0;
   box-shadow: none;
 }
-
+.text-danger{
+  color: var(--cds-support-01, #da1e28);
+}
+.error{
+  margin-bottom: 3rem;
+}
+.afe-control{
+  margin-bottom: 1.5rem;
+}
+[hidden] {
+  display: none !important;
+}
     `;

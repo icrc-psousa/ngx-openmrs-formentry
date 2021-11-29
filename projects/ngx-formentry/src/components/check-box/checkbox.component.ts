@@ -6,8 +6,7 @@ import {
   AfterViewInit
 } from '@angular/core';
 
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DataSource } from '../../form-entry/question-models/interfaces/data-source';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import * as _ from 'lodash';
 
 @Component({
@@ -19,14 +18,6 @@ import * as _ from 'lodash';
       useExisting: forwardRef(() => CheckboxControlComponent),
       multi: true
     }
-  ],
-  styles: [
-    `
-      .no-border {
-        border: 0;
-        box-shadow: none;
-      }
-    `
   ]
 })
 export class CheckboxControlComponent implements OnInit, AfterViewInit {

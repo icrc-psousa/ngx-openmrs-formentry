@@ -2,8 +2,21 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../out-tsc/app",
-    "module": "es2015",
     "types": ["node"]
   },
-  "exclude": ["src/test.ts", "**/*.spec.ts"]
+  "files": [
+    "main.ts",
+    "polyfills.ts"
+  ],
+  "paths": {
+    "ngx-formentry": [
+      "projects/ngx-formentry"
+    ],
+    "ngx-formentry/*": [
+      "projects/ngx-formentry/*"
+    ]
+  },
+  "include": [
+    "src/**/*.d.ts"
+  ]
 }

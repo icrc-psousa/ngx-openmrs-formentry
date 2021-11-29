@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormGroup } from '@angular/forms';
 
-import { Subscriber } from 'rxjs';
-import { Observable, Subject, of } from 'rxjs';
+import { Subscriber, Observable, Subject, of, Observer } from 'rxjs';
 
 import {
   QuestionFactory,
@@ -14,8 +13,8 @@ import {
   EncounterAdapter,
   DataSources,
   FormErrorsService,
-  EncounterPdfViewerService
-} from '../../dist/ngx-formentry';
+  // EncounterPdfViewerService
+} from '@ampath-kenya/ngx-formentry';
 import { MockObs } from './mock/mock-obs';
 
 const adultForm = require('./adult-1.4.json');
@@ -45,7 +44,7 @@ export class AppComponent implements OnInit {
     private orderAdaptor: OrderValueAdapter,
     private encAdapter: EncounterAdapter,
     private dataSources: DataSources,
-    private encounterPdfViewerService: EncounterPdfViewerService,
+    // private encounterPdfViewerService: EncounterPdfViewerService,
     private formErrorsService: FormErrorsService,
     private http: HttpClient
   ) {
@@ -74,15 +73,17 @@ export class AppComponent implements OnInit {
       resolveSelectedValue: this.sampleResolve
     });
 
+
     const ds = {
       dataSourceOptions: { concept: undefined },
       searchOptions: (text?: string) => {
         if (ds.dataSourceOptions && ds.dataSourceOptions.concept) {
           const items: Array<any> = [
-            { id: 1, text: 'Stage 1 Symptom' },
-            { id: 2, text: 'Stage 2 Symptom' }
+            { value: 1, label: 'Stage 1 Symptom' },
+            { value: 2, label: 'Stage 2 Symptom' }
           ];
-          return Observable.create((observer: Subject<any>) => {
+         
+          return  new Observable((observer: Observer<object>) => {
             setTimeout(() => {
               observer.next(items);
             }, 1000);
@@ -92,8 +93,8 @@ export class AppComponent implements OnInit {
 
       resolveSelectedValue: (key: string) => {
         if (ds.dataSourceOptions && ds.dataSourceOptions.concept) {
-          const item = { id: 1, text: 'Stage 1 Symptom' };
-          return Observable.create((observer: Subject<any>) => {
+          const item = { value: 1, label: 'Stage 1 Symptom' };
+          return  new Observable((observer: Observer<object>) => {
             setTimeout(() => {
               observer.next(item);
             }, 1000);
@@ -236,7 +237,6 @@ export class AppComponent implements OnInit {
 
   public onSubmit($event) {
     $event.preventDefault();
-
     // Set valueProcessingInfo
     this.form.valueProcessingInfo = {
       patientUuid: 'patientUuid',
@@ -250,8 +250,7 @@ export class AppComponent implements OnInit {
 
     if (this.form.valid) {
       this.form.showErrors = false;
-      const payload = this.encAdapter.generateFormPayload(this.form);
-
+      // const payload = this.encAdapter.generateFormPayload(this.form);
       // Alternative is to populate for each as shown below
       // // generate obs payload
       // let payload = this.obsValueAdapater.generateFormPayload(this.form);
@@ -264,9 +263,15 @@ export class AppComponent implements OnInit {
     }
   }
 
+  public reset($event) {
+    $event.preventDefault();
+    this.form.rootNode.control.reset();
+  }
+
   public toggleEncounterViewer() {
     this.showingEncounterViewer === true
       ? (this.showingEncounterViewer = false)
       : (this.showingEncounterViewer = true);
   }
+
 }

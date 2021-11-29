@@ -8,8 +8,10 @@ import { ArrayNode } from '../form-factory/form-node';
 import { ControlRelationsFactory } from '../form-factory/control-relations.factory';
 import { Form } from '../form-factory/form';
 import * as moment_ from 'moment';
+import { Injectable } from "@angular/core";
 
 const moment = moment_;
+@Injectable()
 export class ExpressionRunner {
   getRunnable(
     expression: string,
@@ -29,10 +31,11 @@ export class ExpressionRunner {
         window['moment'] = moment;
         // scope.moment = moment;
         scope['myValue'] = control.value;
+        scope['FORM'] = {};
+        runner.setControlQuestion(control, form, scope);
         runner.getControlRelationValueString(control, scope);
         runner.getHelperMethods(helper, scope);
         runner.getDataDependencies(dataDependencies, scope);
-
         if (form) {
           // console.error('Form defined', form);
           runner.getDataDependencies(
@@ -53,27 +56,24 @@ export class ExpressionRunner {
 
         // prevent more than one return statements
         if (expression.indexOf('return') === -1) {
-          expression = '"return ' + expression + '"';
+          expression = 'return ' + expression;
         }
-
-        let funcDeclarationCode =
-          'var afeDynamicFunc = new Function("' +
-          paramList +
-          '", ' +
-          expression +
-          ');';
-        let funcCallCode =
-          'afeDynamicFunc.call(this ' +
-          (argList === '' ? '' : ',' + argList) +
-          ');';
+        const afeDynamicFunc = new Function(paramList, expression);
+        scope[Symbol.iterator] = function* () {
+          var k;
+          for (k in this) {
+            yield this[k];
+          }
+        };
 
         try {
           if (Object.keys(scope).indexOf('undefined') >= 0) {
             console.warn('Missing reference found', expression, scope);
             return false;
           }
-          //console.info('results: ', expression, eval(funcDeclarationCode + funcCallCode));
-          return eval(funcDeclarationCode + funcCallCode);
+          //console.log('Result====>',res)
+          //console.log('results: ', eval(funcDeclarationCode + funcCallCode));
+          return afeDynamicFunc.call(this, ...scope);
         } catch (e) {
           // if (window['error_count']) {
           //     window['error_count'] = window['error_count'] + 1;
@@ -147,6 +147,20 @@ export class ExpressionRunner {
             scope
           );
         }
+      });
+    }
+  }
+
+  private setControlQuestion(control: AfeFormArray | AfeFormGroup | AfeFormControl,
+    form: Form, scope: any) {
+    if (
+      control &&
+      control.controlRelations &&
+      control.controlRelations.relations) {
+      control.controlRelations.relations.forEach((relation) => {
+        const related = relation.relatedTo as any;
+        const question = form.searchNodeByQuestionId(related.uuid)[0]?.question?.extras;
+        scope["FORM"][related.uuid] = question;
       });
     }
   }

@@ -1,22 +1,24 @@
 {
-  "name": "ngx-openmrs-formentry",
-  "version": "2.12.9",
+  "name": "@ampath-kenya/ngx-formentry",
+  "version": "3.0.0-alpha7",
+  "dependencies": {
+  },
   "peerDependencies": {
-    "@angular/common": "^6.1.0",
-    "@angular/core": "^6.1.0",
+    "@angular/animations": ">=11.2.14 <=12.0.4",
+    "@angular/cdk": ">=11.2.13 <=12.0.4",
+    "@angular/common": ">=11.2.14 <=12.0.4",
+    "@angular/compiler": ">=11.2.14 <=12.0.4",
+    "@angular/core": ">=11.2.14 <=12.0.4",
+    "@angular/forms": ">=11.2.14 <=12.0.4",
     "hammerjs": "^2.0.8",
-    "jquery": "^3.1.1",
     "lodash": "^4.17.4",
     "moment": "^2.17.1",
-    "@ng-select/ng-select": "^2.13.1",
-    "ngx-bootstrap": "next",
-    "pdfmake": "0.1.40",
-    "jspdf": "^1.5.3",
-    "ngx-file-uploader": "0.0.18",
+    "@ng-select/ng-select": "^6.1.0",  
     "ngx-webcam": "^0.2.2",
     "reflect-metadata": "^0.1.9",
     "shelljs": "^0.7.0",
     "slick-carousel": "^1.6.0",
-    "tree-model": "^1.0.5"
+    "tree-model": "^1.0.5",
+    "carbon-components": "^10.36.0"
   }
 }

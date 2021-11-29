@@ -3,10 +3,10 @@ import {
   OnInit,
   Input,
   Inject,
-  OnChanges,
-  SimpleChanges
+  Output,
+  EventEmitter
 } from '@angular/core';
-import 'hammerjs';
+// import 'hammerjs';
 import { DEFAULT_STYLES } from './form-renderer.component.css';
 import { DOCUMENT } from '@angular/common';
 import { DataSources } from '../data-sources/data-sources';
@@ -16,6 +16,8 @@ import { ValidationFactory } from '../form-factory/validation.factory';
 import { DataSource } from '../question-models/interfaces/data-source';
 import { FormErrorsService } from '../services/form-errors.service';
 import { QuestionGroup } from '../question-models/group-question';
+import { SelectOption } from '../question-models/interfaces/select-option';
+
 // import { concat, of, Observable, Subject, BehaviorSubject } from 'rxjs';
 // import * as _ from 'lodash';
 
@@ -38,10 +40,12 @@ export class FormRendererComponent implements OnInit {
   public dataSource: DataSource;
   public isCollapsed = false;
   public auto: any;
+  public followFocus = true;
+  public cacheActive = false;
+  public isNavigation = true;
+  public type = 'default';
+  inlineDatePicker: Date = new Date();
 
-  // items$: Observable<any[]>;
-  // itemsLoading = false;
-  // itemsInput$ = new Subject<string>();
 
   constructor(
     private validationFactory: ValidationFactory,
@@ -234,10 +238,7 @@ export class FormRendererComponent implements OnInit {
     } else {
       e.style.display = 'block';
     }
-
-    console.log('InfoId', infoId);
   }
-
   private getErrors(node: NodeBase) {
     const errors: any = node.control.errors;
 
@@ -247,4 +248,5 @@ export class FormRendererComponent implements OnInit {
 
     return [];
   }
+
 }
